@@ -1,8 +1,9 @@
 # CSV to TXT transformer
 
-This is a simple python script that can transform csv files to txt files, which contain all but one fields in the filename, and the data in the last column as content of the file.
+This is a simple python script that can transform csv files to txt files. By default it will create files which contain all but one fields in the filename, and the data in the last column as content of the file. There is, however, also the option to aggregate rows into separate files,
+based in unique values in a column.
 
-It has two basic, and required, command line options, and relies heavily one two conventions with regard to the source files: filename conventions, and data conventions.
+The script has two basic required, command line options, and relies heavily on two conventions with regard to the source files: filename conventions, and data conventions.
 
 ## Requirements
 
@@ -14,6 +15,7 @@ Pyhton 3. (Developed against 3.6 but other version should work)
 | ------- | ---------- |
 |`--source`, `-s` | Either a file or folder full of files that will be transformed |
 | `--target`, `-t` | The target folder where the new txt files will be placed. Will be created if it does not exist |
+| `--agg_col`, `-ac` | The column to aggregate on. Rows will be divided into files named after unique values in this column |
 | `--help`, `-h` | Display help menu |
 
 ## Source filename conventions
@@ -39,13 +41,30 @@ target_folder
 |   └── GR_NL_whatever_metadata_fields_were_found.txt
 ├── GR_EN
 |   └── GR_EN_whatever_metadata_fields_were_found.txt
-├── GR_ALL
+└── GR_ALL
     └── GR_ALL_whatever_metadata_fields_were_found.txt
 ```
 
 Note how the last example is not a language indicator per se, any unique value here would do.
 
 Also, and importantly, the `.txt`s from files called `GR_one_NL.csv`, `GR_two_NL`, and `GR_three_NL` will all end up in the same folder, so try to avoid that.
+
+### Aggregating by column
+
+If you supply the `--agg_col` argument, the above still counts. However, the metadata fields will be lost, i.e. they are not stored anywhere.
+Instead what you get is a number of files aggregated into files with unique values found in the column you supplied. Example output:
+
+```txt
+target_folder
+└── GR_NL
+    └── unique_value_1.txt
+    └── unique_value_2.txt
+    ...
+```
+
+Note that the file `unique_value_1.txt` contains all the texts (i.e. very last column) from rows that have `unique_value_1` in the column you provided. A file will be created for every value found.
+
+CAUTION: when running the script to aggregate, it appends texts into existing files. Therefore, if you run the script multiple times with the same output folder, you might mess up your data, because the same text could be appended multiple times into the same file.
 
 ## Data conventions
 
