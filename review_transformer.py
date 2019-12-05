@@ -13,6 +13,15 @@ def source(path):
             "Source '{}' is not a directory nor a file".format(path))
     return path
 
+def integer(value):
+    try: 
+        result = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("Value '{}' is not an integer".format(value))
+    
+    if not result > 0: raise argparse.ArgumentTypeError("Value '{}' should be 0 or higher".format(value))
+    return result    
+
 
 def parseArguments(sysArgs):
     parser = argparse.ArgumentParser(
@@ -27,6 +36,12 @@ def parseArguments(sysArgs):
         dest='target', required=True,
         help="The target folder where the new txt files will be placed. Will be created if it does not exist")
 
+    parser.add_argument(
+        '--agg_col', '-ac',
+        dest='agg_col', type=integer,
+        help="The column to aggregate on. Rows will be divided into files named after unique values in this column"
+    )
+
     parsedArgs = parser.parse_args()
 
     return parsedArgs
@@ -36,15 +51,16 @@ def main(sysArgs):
     args = parseArguments(sysArgs)
 
     if os.path.isfile(args.source):
-        process_source(args.source, args.target)
+        process_source(args.source, args.target, int(args.agg_col))
     else:
         for file in os.listdir(args.source):
-            process_source(os.path.join(args.source, file), args.target)
+            process_source(os.path.join(args.source, file), args.target, int(args.agg_col))
 
 
-def process_source(filepath, target_folder):
+def process_source(filepath, target_folder, agg_col):
     file_prefix = get_filename_prefix(filepath)
     target_folder = os.path.join(target_folder, file_prefix)
+    if agg_col: agg_files = []
     
     with open(filepath) as csv_file:
         # reader = csv.DictReader(csv_file)
@@ -52,8 +68,14 @@ def process_source(filepath, target_folder):
         # Read first line and count columns
         no_of_columns = len(next(csv_reader))
 
+        if agg_col and agg_col > no_of_columns:
+            raise argparse.ArgumentTypeError("agg_col '{0}' does not exist in '{1}'".format(agg_col, filepath))
+
         for row in csv_reader:
-            process_row(row, no_of_columns, file_prefix, target_folder)
+            if not agg_col:
+                process_row(row, no_of_columns, file_prefix, target_folder)
+            else:
+                process_row_aggregate(row, no_of_columns, target_folder, agg_col, agg_files)
 
 
 def get_filename_prefix(source_file):
@@ -75,19 +97,36 @@ def process_row(row, no_of_columns, filename_prefix, target_folder):
             text = row[i]
 
     filename = '{0}_{1}.txt'.format(filename_prefix, '_'.join(filename_fields))    
-    export(target_folder, filename, text)
+    export(target_folder, filename, text, 'w')
 
     filename_fields = []
     text = ''
 
 
-def export(target_folder, filename, text):
+def process_row_aggregate(row, no_of_columns, target_folder, agg_col, agg_files):
+    text = row[no_of_columns - 1]
+    agg_col_value = row[agg_col]
+    filename = '{0}.txt'.format(agg_col_value)
+
+    if not agg_col_value in agg_files:
+        agg_files.append(agg_col_value)
+        export(target_folder, filename, text, 'w')
+    else:
+        export(target_folder, filename, text, 'a')    
+
+
+def get_filename(filename_prefix, filename_fields, agg_col, agg_files):
+    if not agg_col:
+        return 
+
+
+def export(target_folder, filename, text, file_mode):
     orig_dir = os.getcwd()
     if not os.path.exists(target_folder):
         os.makedirs(target_folder)
     os.chdir(target_folder)
 
-    with open(filename, 'w') as exportfile:
+    with open(filename, file_mode) as exportfile:
         exportfile.write(text)
 
     os.chdir(orig_dir)
