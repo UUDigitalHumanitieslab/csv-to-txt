@@ -34,6 +34,12 @@ def parseArguments(sysArgs):
             Rows will be divided into files named after unique values in this column'''
     )
 
+    parser.add_argument(
+        '--delimiter', '-d',
+        dest='delimiter', default=",",
+        help="Optional. The symbol that delimits the fields in the source file. Defaults to ','"
+    )
+
     parsedArgs = parser.parse_args()
 
     return parsedArgs
@@ -43,14 +49,13 @@ def main(sysArgs):
     args = parseArguments(sysArgs)
 
     if os.path.isfile(args.source):
-        process_source(args.source, args.target, args.agg_col)
+        process_source(args.source, args.target, args.delimiter, args.agg_col)
     else:
         for file in os.listdir(args.source):
-            process_source(os.path.join(args.source, file),
-                           args.target, args.agg_col)
+            process_source(os.path.join(args.source, file), args.delimiter, args.target, args.agg_col)
 
 
-def process_source(filepath, target_folder, agg_col):
+def process_source(filepath, target_folder, delimiter, agg_col):
     file_prefix = get_filename_prefix(filepath)
     target_folder = os.path.join(target_folder, file_prefix)
     if agg_col:
@@ -58,7 +63,7 @@ def process_source(filepath, target_folder, agg_col):
 
     with open(filepath) as csv_file:
         # reader = csv.DictReader(csv_file)
-        csv_reader = csv.reader(csv_file, delimiter=',')
+        csv_reader = csv.reader(csv_file, delimiter=delimiter)
 
         # Process first line
         no_of_columns, agg_col = process_header(next(csv_reader), agg_col)

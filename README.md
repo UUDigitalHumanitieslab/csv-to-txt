@@ -15,6 +15,7 @@ Pyhton 3. (Developed against 3.6 but other version should work)
 | ------- | ---------- |
 |`--source`, `-s` | Either a file or folder full of files that will be transformed |
 | `--target`, `-t` | The target folder where the new txt files will be placed. Will be created if it does not exist |
+| `--delimiter`, `-d` | Optional. The symbol that delimits the fields in the source file. Defaults to ',' |
 | `--agg_col`, `-ac` | Optional. The column to aggregate on. Can be either the name of the column as it appears in the top row, or a zero-based index. Rows will be divided into files named after unique values in this column |
 | `--help`, `-h` | Display help menu |
 
