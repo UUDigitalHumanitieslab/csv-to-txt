@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10569033.svg)](https://doi.org/10.5281/zenodo.10569033)
+
 # CSV to TXT transformer
 
 This is a simple python script that can transform csv files to txt files. By default it will create files which contain all but one fields in the filename, and the data in the last column as content of the file. There is, however, also the option to aggregate rows into separate files,
